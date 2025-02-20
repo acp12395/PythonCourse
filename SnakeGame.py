@@ -2,8 +2,22 @@ import turtle
 import random
 import time
 from collections import deque
+from abc import ABC, abstractmethod
 
-class Snake():
+class Subject(ABC):
+    @abstractmethod
+    def registerObserver(self, observer):
+        pass
+    @abstractmethod
+    def _notifyObservers(self):
+        pass
+
+class Observer(ABC):
+    @abstractmethod
+    def update(self, data):
+        pass
+
+class Snake(Subject, Observer):
     _up = 2
     _down = 8
     _right = 6
@@ -12,13 +26,15 @@ class Snake():
 
     def __init__(self):
         self._dir = self._stop
+        self._preyPosition = [0,0]
         self._snake = deque([])
         self._x = 0
         self._y = 0
         self._isLonger = False
         self._time = 0.5
         self._snakeGrows()
-        self._snakeGrows()
+    def registerObserver(self, observer):
+        self._prey = observer
     def _goUp(self):
         if self._dir == self._right or self._dir == self._stop:
             self._dir = self._up
@@ -44,14 +60,16 @@ class Snake():
         elif self._dir == self._stop:
             self._dir = self._left
     def updatePos(self):
+        if self._x == self._preyPosition[0] and self._y == self._preyPosition[1]:
+            self._notifyObservers()
         if self._dir == self._up:
-            self._y = self._y + 10
+            self._y = self._y + 20
         elif self._dir == self._down:
-            self._y = self._y - 10
+            self._y = self._y - 20
         elif self._dir == self._right:
-            self._x = self._x + 10
+            self._x = self._x + 20
         elif self._dir == self._left:
-            self._x = self._x - 10
+            self._x = self._x - 20
         self._move()
         time.sleep(self._time)
     def _snakeGrows(self):
@@ -74,13 +92,20 @@ class Snake():
             self._snake[0].setx(self._x)
             self._snake[0].sety(self._y)
             self._snake[0].showturtle()
+    def _notifyObservers(self):
+        self._prey.update(True)
+    def update(self, data):
+        self._preyPosition = data
+        self._isLonger = True
+        if self._time > 0.025:
+            self._time = self._time - 0.025
+        else:
+            self._time = 0.001
 
 
-
-
-
-class Mouse():
-    def __init__(self):
+class Mouse(Observer, Subject):
+    def __init__(self, predator):
+        self._predator = predator
         self._mouse = turtle.Turtle()
         self._mouse.hideturtle()
         self._mouse.penup()
@@ -88,29 +113,37 @@ class Mouse():
         self._mouse.left(90)
         self._mouse.speed(0)
         self._changePosition()
-
+        predator.registerObserver(self)
     def _changePosition(self):
-        self._x = (int(random.random()*48) - 24)*10
-        self._y = (int(random.random()*48) - 24)*10
+        self._x = (int(random.random()*24) - 12)*20
+        self._y = (int(random.random()*24) - 12)*20
         self._mouse.hideturtle()
         self._mouse.setx(self._x)
         self._mouse.sety(self._y)
         self._mouse.showturtle()
+        self._notifyObservers()
+    def update(self, data):
+        if data:
+            self._changePosition()
+    def registerObserver(self, observer):
+        pass
+    def _notifyObservers(self):
+        self._predator.update(self._mouse.position())
 
 
-s = turtle.Screen()
-s.screensize(500,500,"black")
-mouse = Mouse()
+screen = turtle.Screen()
+screen.screensize(500,500,"black")
 snake = Snake()
+mouse = Mouse(snake)
 
-s.listen()
-s.onkeypress(snake._goUp, "Up")
-s.onkeypress(snake._goDown, "Down")
-s.onkeypress(snake._goRight, "Right")
-s.onkeypress(snake._goLeft, "Left")
+screen.listen()
+screen.onkeypress(snake._goUp, "Up")
+screen.onkeypress(snake._goDown, "Down")
+screen.onkeypress(snake._goRight, "Right")
+screen.onkeypress(snake._goLeft, "Left")
 
 while 1:
-    s.update()
+    screen.update()
     snake.updatePos()
 
 turtle.done()
