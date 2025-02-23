@@ -76,13 +76,20 @@ class Snake(Subject, Observer):
             self._x = self._x - 20
         self._move()
         if abs(self._snake[0].position()[0]) == self._borderSize//2 or abs(self._snake[0].position()[1]) == self._borderSize//2:
-            time.sleep(2)
-            self._notifyObservers()
-            for portion in self._snake:
-                portion.reset()
-            self._initBody()
-            self._snakeGrows()
+            self._reset()
+        for bodyPartIndex in range(1, len(self._snake)):
+            if self._snake[0].position()[0] == self._snake[bodyPartIndex].position()[0] and self._snake[0].position()[1] == self._snake[bodyPartIndex].position()[1]:
+                if self._dir != self._stop:
+                    self._reset()
+                    break
         time.sleep(self._time)
+    def _reset(self):
+        time.sleep(2)
+        self._notifyObservers()
+        for portion in self._snake:
+            portion.reset()
+        self._initBody()
+        self._snakeGrows()
     def _snakeGrows(self):
         snake = turtle.Turtle()
         snake.hideturtle()
@@ -104,8 +111,13 @@ class Snake(Subject, Observer):
             self._snake[0].sety(self._y)
             self._snake[0].showturtle()
     def _notifyObservers(self):
+        data = list([self._snake[0].position()[0],self._snake[0].position()[1]])
+        if self._x == self._preyPosition[0] and self._y == self._preyPosition[1]:
+            data.append(True)
+        else:
+            data.append(False)
         for observer in self._observers:
-            observer.update(self._snake[0].position())
+            observer.update(data)
     def update(self, data):
         self._preyPosition = data
         self._isLonger = True
@@ -113,7 +125,6 @@ class Snake(Subject, Observer):
             self._time = self._time - 0.025
         else:
             self._time = 0.001
-
 
 
 class Mouse(Observer, Subject):
@@ -157,14 +168,15 @@ class ScoreBoard(Observer):
         self._maxScore = 0
         self._board.write("Score: {}                Max Score: {}".format(self._score,self._maxScore), align="center")
     def update(self, data):
-        if abs(data[0]) == self._borderSize//2 or abs(data[1]) == self._borderSize//2:
-            self._score = 0
-        else:
+        if data[2]:
             self._score = self._score + 10
             if self._score > self._maxScore:
                 self._maxScore = self._score
+        else:
+            self._score = 0
         self._board.clear()
         self._board.write("Score: {}                Max Score: {}".format(self._score,self._maxScore), align="center")
+
 
 class Border():
     def __init__(self, screenSize):
@@ -188,6 +200,7 @@ class Border():
     @property
     def borderSize(self):
         return self._upper - self._bottom
+
 
 screenSize = 500
 screen = turtle.Screen()
