@@ -77,6 +77,7 @@ class Snake(Subject, Observer):
         self._move()
         if abs(self._snake[0].position()[0]) == self._borderSize//2 or abs(self._snake[0].position()[1]) == self._borderSize//2:
             time.sleep(2)
+            self._notifyObservers()
             for portion in self._snake:
                 portion.reset()
             self._initBody()
@@ -118,7 +119,7 @@ class Snake(Subject, Observer):
 class Mouse(Observer, Subject):
     _hasObserver = False
     def __init__(self, predator, border):
-        self._borderSize = border.borderSize
+        self._borderSize = border.borderSize - 20
         self._mouse = turtle.Turtle()
         self._mouse.hideturtle()
         self._mouse.penup()
@@ -136,7 +137,7 @@ class Mouse(Observer, Subject):
         self._mouse.showturtle()
         self._notifyObservers()
     def update(self, data):
-        if data:
+        if data[0] == self._x and data[1] == self._y:
             self._changePosition()
     def registerObserver(self, observer):
         pass
@@ -145,19 +146,23 @@ class Mouse(Observer, Subject):
 
 
 class ScoreBoard(Observer):
-    def __init__(self,screenSize):
+    def __init__(self, border):
+        self._borderSize = border.borderSize
         self._board = turtle.Turtle()
         self._board.hideturtle()
         self._board.penup()
         self._board.color("white")
-        self._board.goto(0,-(screenSize//2 - 10))
+        self._board.goto(0,-(self._borderSize//2 + 20))
         self._score = 0
         self._maxScore = 0
         self._board.write("Score: {}                Max Score: {}".format(self._score,self._maxScore), align="center")
     def update(self, data):
-        self._score = self._score + 10
-        if self._score > self._maxScore:
-            self._maxScore = self._score
+        if abs(data[0]) == self._borderSize//2 or abs(data[1]) == self._borderSize//2:
+            self._score = 0
+        else:
+            self._score = self._score + 10
+            if self._score > self._maxScore:
+                self._maxScore = self._score
         self._board.clear()
         self._board.write("Score: {}                Max Score: {}".format(self._score,self._maxScore), align="center")
 
@@ -188,8 +193,8 @@ screenSize = 500
 screen = turtle.Screen()
 screen.screensize(screenSize,screenSize)
 screen.bgcolor("black")
-scoreBoard = ScoreBoard(screenSize)
 border = Border(screenSize)
+scoreBoard = ScoreBoard(border)
 snake = Snake(border)
 mouse = Mouse(snake, border)
 snake.registerObserver(scoreBoard)
