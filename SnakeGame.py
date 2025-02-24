@@ -31,6 +31,7 @@ class Snake(Subject, Observer):
         self._initBody()
     def _initBody(self):
         self._dir = self._stop
+        self._changingDir = True
         self._x = 0
         self._y = 0
         self._snake = deque([])
@@ -40,29 +41,43 @@ class Snake(Subject, Observer):
     def registerObserver(self, observer):
         self._observers.append(observer)
     def _goUp(self):
-        if self._dir == self._right or self._dir == self._stop:
-            self._dir = self._up
-        elif self._dir == self._left:
-            self._dir = self._up
+        if self._changingDir != True:
+            if self._dir == self._right or self._dir == self._stop:
+                self._dir = self._up
+                self._changingDir = True
+            elif self._dir == self._left:
+                self._dir = self._up
+                self._changingDir = True
     def _goDown(self):
-        if self._dir == self._right or self._dir == self._stop:
-            self._dir = self._down
-        elif self._dir == self._left:
-            self._dir = self._down
+        if self._changingDir != True:
+            if self._dir == self._right or self._dir == self._stop:
+                self._dir = self._down
+                self._changingDir = True
+            elif self._dir == self._left:
+                self._dir = self._down
+                self._changingDir = True
     def _goRight(self):
-        if self._dir == self._up:
-            self._dir = self._right
-        elif self._dir == self._down:
-            self._dir = self._right
-        elif self._dir == self._stop:
-            self._dir = self._right
+        if self._changingDir != True:
+            if self._dir == self._up:
+                self._dir = self._right
+                self._changingDir = True
+            elif self._dir == self._down:
+                self._dir = self._right
+                self._changingDir = True
+            elif self._dir == self._stop:
+                self._dir = self._right
+                self._changingDir = True
     def _goLeft(self):
-        if self._dir == self._up:
-            self._dir = self._left
-        elif self._dir == self._down:
-            self._dir = self._left
-        elif self._dir == self._stop:
-            self._dir = self._left
+        if self._changingDir != True:
+            if self._dir == self._up:
+                self._dir = self._left
+                self._changingDir = True
+            elif self._dir == self._down:
+                self._dir = self._left
+                self._changingDir = True
+            elif self._dir == self._stop:
+                self._dir = self._left
+                self._changingDir = True
     def updatePos(self):
         if self._x == self._preyPosition[0] and self._y == self._preyPosition[1]:
             self._notifyObservers()
@@ -75,6 +90,7 @@ class Snake(Subject, Observer):
         elif self._dir == self._left:
             self._x = self._x - 20
         self._move()
+        self._changingDir = False
         if abs(self._snake[0].position()[0]) == self._borderSize//2 or abs(self._snake[0].position()[1]) == self._borderSize//2:
             self._reset()
         for bodyPartIndex in range(1, len(self._snake)):
@@ -201,7 +217,6 @@ class Border():
     def borderSize(self):
         return self._upper - self._bottom
 
-
 screenSize = 500
 screen = turtle.Screen()
 screen.screensize(screenSize,screenSize)
@@ -223,5 +238,3 @@ screen.onkeypress(snake._goLeft, "Left")
 while 1:
     screen.update()
     snake.updatePos()
-
-turtle.done()
