@@ -137,11 +137,16 @@ class Snake(Subject, Observer):
             observer.update(data)
     def update(self, data):
         self._preyPosition = data
+        for bodyPart in self._snake:
+            if bodyPart.position() == self._preyPosition:
+                return False
         self._isLonger = True
         if self._time > 0.025:
             self._time = self._time - 0.025
         else:
             self._time = 0.001
+        return True
+        
 
     def _startListening(self):
         turtle.onkeypress(self._goUp, "Up")
@@ -164,20 +169,24 @@ class Mouse(Observer, Subject):
         self._predator = predator
         self._changePosition()
     def _changePosition(self):
-        self._x = ((int(random.random()*self._borderSize//20))-self._borderSize//40)*20
-        self._y = ((int(random.random()*self._borderSize//20))-self._borderSize//40)*20
+        success = False
+        while not success:
+            self._x = ((int(random.random()*self._borderSize//20))-self._borderSize//40)*20
+            self._y = ((int(random.random()*self._borderSize//20))-self._borderSize//40)*20
+            success = self._notifyObservers()
         self._mouse.hideturtle()
         self._mouse.setx(self._x)
         self._mouse.sety(self._y)
         self._mouse.showturtle()
-        self._notifyObservers()
+        
     def update(self, data):
         if data[0] == self._x and data[1] == self._y:
             self._changePosition()
     def registerObserver(self, observer):
         pass
     def _notifyObservers(self):
-        self._predator.update(self._mouse.position())
+        position = (self._x,self._y)
+        return self._predator.update(position)
 
 
 class ScoreBoard(Observer):
