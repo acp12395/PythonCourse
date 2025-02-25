@@ -238,6 +238,9 @@ screenSize = 500
 screen = turtle.Screen()
 screen.screensize(screenSize,screenSize)
 screen.bgcolor("black")
+#canvas = screen.getcanvas()
+root = screen.getcanvas().winfo_toplevel()
+
 border = Border(screenSize)
 scoreBoard = ScoreBoard(border)
 snake = Snake(border)
@@ -247,6 +250,14 @@ snake.registerObserver(mouse)
 mouse.registerObserver(snake)
 
 
-while 1:
+def on_close():
+    global running
+    running = False
+
+root.protocol("WM_DELETE_WINDOW", on_close)
+
+running = True
+
+while running:
     screen.update()
     snake.updatePos()
