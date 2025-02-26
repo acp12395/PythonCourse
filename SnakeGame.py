@@ -41,7 +41,7 @@ class Snake(Subject, Observer):
         self._snakeGrows()
     def registerObserver(self, observer):
         self._observers.append(observer)
-    def _goUp(self):
+    def _goUp(self):  # ISR for changing direction to "up"
         if self._changingDir != True:
             if self._dir == self._right or self._dir == self._stop:
                 self._dir = self._up
@@ -49,7 +49,7 @@ class Snake(Subject, Observer):
             elif self._dir == self._left:
                 self._dir = self._up
                 self._changingDir = True
-    def _goDown(self):
+    def _goDown(self):  # ISR for changing direction to "down"
         if self._changingDir != True:
             if self._dir == self._right or self._dir == self._stop:
                 self._dir = self._down
@@ -57,7 +57,7 @@ class Snake(Subject, Observer):
             elif self._dir == self._left:
                 self._dir = self._down
                 self._changingDir = True
-    def _goRight(self):
+    def _goRight(self):  # ISR for changing direction to "right"
         if self._changingDir != True:
             if self._dir == self._up:
                 self._dir = self._right
@@ -68,7 +68,7 @@ class Snake(Subject, Observer):
             elif self._dir == self._stop:
                 self._dir = self._right
                 self._changingDir = True
-    def _goLeft(self):
+    def _goLeft(self):  # ISR for changing direction to "left"
         if self._changingDir != True:
             if self._dir == self._up:
                 self._dir = self._left
@@ -122,12 +122,12 @@ class Snake(Subject, Observer):
             self._snakeGrows()
             self._isLonger = False
         else:
-            self._snake.rotate(1)
-            self._snake[0].hideturtle()
+            self._snake.rotate(1)  # To crawl simply take the last part of the body and place as if it's the first
+            self._snake[0].hideturtle()  # Coordinates remain the same, so first hide before the actual graphical move
             self._snake[0].setx(self._x)
             self._snake[0].sety(self._y)
             self._snake[0].showturtle()
-    def _notifyObservers(self):
+    def _notifyObservers(self):  # Notifies whether it reached a mouse position, reached the border or even bit itself
         data = list([self._snake[0].position()[0],self._snake[0].position()[1]])
         if self._x == self._preyPosition[0] and self._y == self._preyPosition[1]:
             data.append(True)
@@ -135,7 +135,7 @@ class Snake(Subject, Observer):
             data.append(False)
         for observer in self._observers:
             observer.update(data)
-    def update(self, data):
+    def update(self, data):  # Receives information on whether the mouse reappears
         self._preyPosition = data
         for bodyPart in self._snake:
             if bodyPart.position() == self._preyPosition:
@@ -146,9 +146,7 @@ class Snake(Subject, Observer):
         else:
             self._time = 0.001
         return True
-        
-
-    def _startListening(self):
+    def _startListening(self):  # Listens to commands for crawling direction
         turtle.onkeypress(self._goUp, "Up")
         turtle.onkeypress(self._goDown, "Down")
         turtle.onkeypress(self._goRight, "Right")
@@ -168,17 +166,16 @@ class Mouse(Observer, Subject):
         self._mouse.speed(0)
         self._predator = predator
         self._changePosition()
-    def _changePosition(self):
+    def _changePosition(self):  # Change position to a random place within the borders
         success = False
         while not success:
             self._x = ((int(random.random()*self._borderSize//20))-self._borderSize//40)*20
             self._y = ((int(random.random()*self._borderSize//20))-self._borderSize//40)*20
-            success = self._notifyObservers()
+            success = self._notifyObservers()  # In case appeared under the snake there was no success and tries again
         self._mouse.hideturtle()
         self._mouse.setx(self._x)
         self._mouse.sety(self._y)
         self._mouse.showturtle()
-        
     def update(self, data):
         if data[0] == self._x and data[1] == self._y:
             self._changePosition()
@@ -238,16 +235,14 @@ screenSize = 500
 screen = turtle.Screen()
 screen.screensize(screenSize,screenSize)
 screen.bgcolor("black")
-#canvas = screen.getcanvas()
 root = screen.getcanvas().winfo_toplevel()
 
-border = Border(screenSize)
-scoreBoard = ScoreBoard(border)
-snake = Snake(border)
-mouse = Mouse(snake, border)
-snake.registerObserver(scoreBoard)
-snake.registerObserver(mouse)
-mouse.registerObserver(snake)
+border = Border(screenSize)  # Border is drawn according to screensize
+scoreBoard = ScoreBoard(border)  # Scoreboard is drawn outside the border
+snake = Snake(border)  # Snake cannot get out of the border
+mouse = Mouse(snake, border)  # Enforce snake to be created before the mouse. Snake needs to know where the mouse is when created
+snake.registerObserver(scoreBoard)  # Scoreboard needs to know when snake eats a mouse
+snake.registerObserver(mouse)  # Mouse needs to know when snake reaches its position
 
 
 def on_close():
@@ -258,6 +253,6 @@ root.protocol("WM_DELETE_WINDOW", on_close)
 
 running = True
 
-while running:
+while running:  # It won't still try to execute even after windows is closed
     screen.update()
     snake.updatePos()
